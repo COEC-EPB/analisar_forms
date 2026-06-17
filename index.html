@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análise de Inspeções</title>
+
+<style>
+    :root{
+        --primary:#0097CE;
+        --primary-dark:#0079A8;
+        --green:#00843D;
+        --orange:#d97706;
+        --danger:#D32F2F;
+        --bg:#F3F5F7;
+        --border:#D9E0E6;
+        --text:#333;
+        --white:#fff;
+        --muted:#6b7280;
+    }
+
+    *{
+        box-sizing:border-box;
+    }
+
+    body{
+        font-family:Arial, Helvetica, sans-serif;
+        background:var(--bg);
+        margin:0;
+        padding:20px;
+        color:var(--text);
+    }
+
+    .container{
+        max-width:1400px;
+        margin:auto;
+    }
+
+    .header{
+        background:linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color:white;
+        padding:20px 30px;
+        border-radius:14px;
+        margin-bottom:25px;
+        box-shadow:0 4px 15px rgba(0,0,0,.15);
+    }
+
+    .header h1{
+        margin:0;
+        font-size:28px;
+    }
+
+    .header span{
+        opacity:.9;
+        font-size:14px;
+    }
+
+    .card{
+        background:white;
+        border-radius:14px;
+        margin-bottom:20px;
+        overflow:hidden;
+        box-shadow:0 2px 12px rgba(0,0,0,.08);
+    }
+
+    .card-title{
+        background:var(--primary);
+        color:white;
+        padding:14px 18px;
+        font-size:18px;
+        font-weight:bold;
+    }
+
+    .card-body{
+        padding:18px;
+    }
+
+    .kpis{
+        display:grid;
+        grid-template-columns: repeat(4, minmax(0,1fr));
+        gap:16px;
+    }
+
+    .kpi{
+        background:#fff;
+        border:1px solid var(--border);
+        border-radius:14px;
+        padding:18px;
+        box-shadow:0 2px 8px rgba(0,0,0,.04);
+    }
+
+    .kpi-label{
+        font-size:13px;
+        color:var(--muted);
+        margin-bottom:8px;
+        font-weight:700;
+        text-transform:uppercase;
+    }
+
+    .kpi-value{
+        font-size:28px;
+        font-weight:800;
+        color:#111827;
+    }
+
+    .grid-filtros{
+        display:grid;
+        grid-template-columns: repeat(4, minmax(0,1fr));
+        gap:14px;
+    }
+
+    label{
+        display:block;
+        font-weight:700;
+        margin-bottom:6px;
+        font-size:13px;
+    }
+
+    input, select{
+        width:100%;
+        padding:11px 12px;
+        border:1px solid var(--border);
+        border-radius:10px;
+        font-size:14px;
+        background:#fff;
+    }
+
+    input:focus, select:focus{
+        outline:none;
+        border-color:var(--primary);
+        box-shadow:0 0 0 3px rgba(0,151,206,.15);
+    }
+
+    .acoes-filtros{
+        display:flex;
+        gap:10px;
+        margin-top:16px;
+        flex-wrap:wrap;
+    }
+
+    button{
+        background:var(--primary);
+        color:white;
+        border:none;
+        border-radius:10px;
+        padding:12px 18px;
+        font-size:14px;
+        font-weight:bold;
+        cursor:pointer;
+        transition:.2s;
+    }
+
+    button:hover{
+        background:var(--primary-dark);
+    }
+
+    .btn-ghost{
+        background:#f3f4f6;
+        color:#111827;
+        border:1px solid var(--border);
+    }
+
+    .btn-ghost:hover{
+        background:#e5e7eb;
+    }
+
+    .table-wrap{
+        overflow:auto;
+    }
+
+    table{
+        width:100%;
+        border-collapse:collapse;
+        min-width:1150px;
+    }
+
+    th{
+        background:var(--primary);
+        color:white;
+        padding:12px;
+        text-align:left;
+        font-size:13px;
+        position:sticky;
+        top:0;
+        z-index:5;
+    }
+
+    td{
+        padding:12px;
+        border-bottom:1px solid #eee;
+        font-size:14px;
+        vertical-align:top;
+    }
+
+    tbody tr:nth-child(odd){
+        background:#fafafa;
+    }
+
+    tbody tr:hover{
+        background:#f0f8fc;
+    }
+
+    .badge{
+        display:inline-block;
+        padding:6px 10px;
+        border-radius:999px;
+        font-size:12px;
+        font-weight:800;
+        white-space:nowrap;
+    }
+
+    .badge-epi{
+        background:#ecfdf5;
+        color:#166534;
+        border:1px solid #bbf7d0;
+    }
+
+    .badge-viatura{
+        background:#eff6ff;
+        color:#1d4ed8;
+        border:1px solid #bfdbfe;
+    }
+
+    .badge-nc{
+        background:#fef2f2;
+        color:#991b1b;
+        border:1px solid #fecaca;
+    }
+
+    .badge-ok{
+        background:#f3f4f6;
+        color:#374151;
+        border:1px solid #e5e7eb;
+    }
+
+    .status{
+        display:none;
+        margin-top:14px;
+        padding:12px 14px;
+        border-radius:10px;
+        font-size:14px;
+        font-weight:bold;
+    }
+
+    .status.ok{
+        display:block;
+        background:#ecfdf5;
+        color:#166534;
+        border:1px solid #bbf7d0;
+    }
+
+    .status.erro{
+        display:block;
+        background:#fef2f2;
+        color:#991b1b;
+        border:1px solid #fecaca;
+    }
+
+    .status.info{
+        display:block;
+        background:#eef6fb;
+        color:#0f4c5c;
+        border:1px solid rgba(0,151,206,.18);
+    }
+
+    .modal{
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,.45);
+        display:none;
+        align-items:center;
+        justify-content:center;
+        padding:20px;
+        z-index:100;
+    }
+
+    .modal-content{
+        width:min(1100px, 100%);
+        max-height:90vh;
+        overflow:auto;
+        background:white;
+        border-radius:16px;
+        box-shadow:0 20px 60px rgba(0,0,0,.25);
+        overflow:hidden;
+    }
+
+    .modal-header{
+        background:var(--primary);
+        color:white;
+        padding:16px 20px;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+    }
+
+    .modal-header h3{
+        margin:0;
+        font-size:20px;
+    }
+
+    .modal-body{
+        padding:20px;
+    }
+
+    .det-grid{
+        display:grid;
+        grid-template-columns: repeat(4, minmax(0,1fr));
+        gap:12px;
+        margin-bottom:20px;
+    }
+
+    .det-card{
+        border:1px solid var(--border);
+        border-radius:12px;
+        padding:12px;
+        background:#fff;
+    }
+
+    .det-label{
+        font-size:12px;
+        font-weight:800;
+        color:var(--muted);
+        text-transform:uppercase;
+        margin-bottom:6px;
+    }
+
+    .det-value{
+        font-size:14px;
+        font-weight:700;
+        color:#111827;
+        word-break:break-word;
+    }
+
+    .subsection{
+        margin-top:18px;
+    }
+
+    .subsection h4{
+        margin:0 0 12px 0;
+        font-size:18px;
+        color:#1f2937;
+    }
+
+    .checklist-grid{
+        display:grid;
+        gap:12px;
+    }
+
+    .check-item{
+        border:1px solid var(--border);
+        border-radius:12px;
+        padding:14px;
+        background:#fff;
+    }
+
+    .check-item.top-nc{
+        border-color:#fecaca;
+        background:#fff5f5;
+    }
+
+    .check-title{
+        font-size:15px;
+        font-weight:800;
+        margin-bottom:10px;
+    }
+
+    .check-meta{
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+    }
+
+    .obs-box{
+        margin-top:10px;
+        padding:10px 12px;
+        border-radius:10px;
+        background:#fff;
+        border:1px dashed #d1d5db;
+        font-size:14px;
+    }
+
+    @media(max-width: 1100px){
+        .kpis{
+            grid-template-columns: repeat(2, minmax(0,1fr));
+        }
+
+        .grid-filtros{
+            grid-template-columns: repeat(2, minmax(0,1fr));
+        }
+
+        .det-grid{
+            grid-template-columns: repeat(2, minmax(0,1fr));
+        }
+    }
+
+    @media(max-width: 700px){
+        body{
+            padding:10px;
+        }
+
+        .kpis{
+            grid-template-columns:1fr;
+        }
+
+        .grid-filtros{
+            grid-template-columns:1fr;
+        }
+
+        .det-grid{
+            grid-template-columns:1fr;
+        }
+
+        .header h1{
+            font-size:22px;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>Análise das Inspeções</h1>
+        <span>Consulta e detalhamento do que foi incluído no formulário</span>
+    </div>
+
+    <!-- KPIs -->
+    <div class="card">
+        <div class="card-title">Resumo</div>
+        <div class="card-body">
+            <div class="kpis">
+                <div class="kpi">
+                    <div class="kpi-label">Total de inspeções</div>
+                    <div class="kpi-value" id="kpiTotal">0</div>
+                </div>
+
+                <div class="kpi">
+                    <div class="kpi-label">EPI / EPC</div>
+                    <div class="kpi-value" id="kpiEpi">0</div>
+                </div>
+
+                <div class="kpi">
+                    <div class="kpi-label">Viatura</div>
+                    <div class="kpi-value" id="kpiViatura">0</div>
+                </div>
+
+                <div class="kpi">
+                    <div class="kpi-label">Itens Não Conformes</div>
+                    <div class="kpi-value" id="kpiNC">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="card">
+        <div class="card-title">Filtros</div>
+        <div class="card-body">
+            <div class="grid-filtros">
+                <div>
+                    <label for="filtroData">Data da inspeção</label>
+                    <input type="date" id="filtroData">
+                </div>
+
+                <div>
+                    <label for="filtroTipo">Tipo de inspeção</label>
+                    <select id="filtroTipo">
+                        <option value="">Todos</option>
+                        <option value="epi">EPI / EPC</option>
+                        <option value="viatura">Viatura</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="filtroResponsavel">Responsável</label>
+                    <input type="text" id="filtroResponsavel" placeholder="Digite o responsável">
+                </div>
+
+                <div>
+                    <label for="filtroColaborador">Matrícula colaborador</label>
+                    <input type="text" id="filtroColaborador" placeholder="Digite a matrícula">
+                </div>
+            </div>
+
+            <div class="acoes-filtros">
+                <button type="button" onclick="aplicarFiltros()">Aplicar filtros</button>
+                <button type="button" class="btn-ghost" onclick="limparFiltros()">Limpar</button>
+                <button type="button" class="btn-ghost" onclick="carregarDados()">Atualizar</button>
+            </div>
+
+            <div id="status" class="status"></div>
+        </div>
+    </div>
+
+    <!-- TABELA -->
+    <div class="card">
+        <div class="card-title">Inspeções Registradas</div>
+        <div class="card-body">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Data</th>
+                            <th>Tipo</th>
+                            <th>Responsável 01</th>
+                            <th>Matrícula 01</th>
+                            <th>Colaborador 01</th>
+                            <th>Placa</th>
+                            <th>Tipo Veículo</th>
+                            <th>Itens NC</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyForms"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modalDetalhes">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Detalhes da Inspeção</h3>
+            <button type="button" class="btn-ghost" onclick="fecharModal()">Fechar</button>
+        </div>
+
+        <div class="modal-body">
+            <div class="det-grid">
+                <div class="det-card">
+                    <div class="det-label">ID</div>
+                    <div class="det-value" id="detId">-</div>
+                </div>
+
+                <div class="det-card">
+                    <div class="det-label">Data</div>
+                    <div class="det-value" id="detData">-</div>
+                </div>
+
+                <div class="det-card">
+                    <div class="det-label">Tipo</div>
+                    <div class="det-value" id="detTipo">-</div>
+                </div>
+
+                <div class="det-card">
+                    <div class="det-label">Criado em</div>
+                    <div class="det-value" id="detCriadoEm">-</div>
+                </div>
+
+                <div class="det-card">
+                    <div class="det-label">Responsável 01</div>
+                    <div class="det-value" id="detResp1">-</div>
+                </div>
+
+                <div class="det-card">
+                    <div class="det-label">Matrícula 01</div>
+                    <div class="det-value" id="detMat1">-</div>
+                </div>
+
+                <div class="det-card">
+                    <div class="det-label">Responsável 02</div>
+                    <div class="det-value" id="detResp2">-</div>
+                </div>
+
+                <div class="det-card">
+                    <div class="det-label">Matrícula 02</div>
+                    <div class="det-value" id="detMat2">-</div>
+                </div>
+
+                <div class="det-card">
+                    <div class="det-label">Colaborador 01</div>
+                    <div class="det-value" id="detColab1">-</div>
+                </div>
+
+                <div class="det-card">
+                    <div class="det-label">Colaborador 02</div>
+                    <div class="det-value" id="detColab2">-</div>
+                </div>
+
+                <div class="det-card">
+                    <div class="det-label">Placa</div>
+                    <div class="det-value" id="detPlaca">-</div>
+                </div>
+
+                <div class="det-card">
+                    <div class="det-label">Tipo Veículo</div>
+                    <div class="det-value" id="detTipoVeiculo">-</div>
+                </div>
+            </div>
+
+            <div class="subsection">
+                <h4>Checklist registrado</h4>
+                <div class="checklist-grid" id="checklistDetalhes"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const API = "https://forms.pedro-fillype.workers.dev";
+
+let formsOriginais = [];
+let formsFiltrados = [];
+
+function setStatus(msg, tipo = "info"){
+    const el = document.getElementById("status");
+    el.textContent = msg;
+    el.className = "status " + tipo;
+}
+
+function formatarData(data){
+    if (!data) return "-";
+    const d = new Date(data + "T00:00:00");
+    return d.toLocaleDateString("pt-BR");
+}
+
+function formatarDataHora(data){
+    if (!data) return "-";
+    const d = new Date(data);
+    if (isNaN(d.getTime())) return data;
+    return d.toLocaleString("pt-BR");
+}
+
+function labelTipo(tipo){
+    return tipo === "epi" ? "EPI / EPC" : "Viatura";
+}
+
+function badgeTipo(tipo){
+    if (tipo === "epi") {
+        return `<span class="badge badge-epi">EPI / EPC</span>`;
+    }
+    return `<span class="badge badge-viatura">Viatura</span>`;
+}
+
+function parseChecklist(item){
+    if (Array.isArray(item.checklist)) return item.checklist;
+
+    if (typeof item.checklist_json === "string") {
+        try {
+            return JSON.parse(item.checklist_json);
+        } catch {
+            return [];
+        }
+    }
+
+    return [];
+}
+
+function contarNaoConformes(item){
+    const checklist = parseChecklist(item);
+    return checklist.filter(x => x.status === "Não Conforme").length;
+}
+
+function atualizarKPIs(lista){
+    const total = lista.length;
+    const totalEpi = lista.filter(x => x.tipo_inspecao === "epi").length;
+    const totalViatura = lista.filter(x => x.tipo_inspecao === "viatura").length;
+    const totalNC = lista.reduce((acc, item) => acc + contarNaoConformes(item), 0);
+
+    document.getElementById("kpiTotal").textContent = total;
+    document.getElementById("kpiEpi").textContent = totalEpi;
+    document.getElementById("kpiViatura").textContent = totalViatura;
+    document.getElementById("kpiNC").textContent = totalNC;
+}
+
+function renderTabela(lista){
+    const tbody = document.getElementById("tbodyForms");
+    tbody.innerHTML = "";
+
+    if (!lista.length){
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="10" style="text-align:center; padding:20px; font-weight:bold; color:#6b7280;">
+                    Nenhuma inspeção encontrada.
+                </td>
+            </tr>
+        `;
+        atualizarKPIs(lista);
+        return;
+    }
+
+    lista.forEach(item => {
+        const nc = contarNaoConformes(item);
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${item.id ?? "-"}</td>
+                <td>${formatarData(item.data_inspecao)}</td>
+                <td>${badgeTipo(item.tipo_inspecao)}</td>
+                <td>${item.responsavel_1 || "-"}</td>
+                <td>${item.matricula_1 || "-"}</td>
+                <td>${item.matricula_colaborador_1 || "-"}</td>
+                <td>${item.placa_veiculo || "-"}</td>
+                <td>${item.tipo_veiculo || "-"}</td>
+                <td>${nc > 0 ? `<span class="badge badge-nc">${nc}</span>` : `<span class="badge badge-ok">0</span>`}</td>
+                <td>
+                    <button type="button" onclick="abrirDetalhes(${item.id})">Ver detalhes</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    atualizarKPIs(lista);
+}
+
+function aplicarFiltros(){
+    const filtroData = document.getElementById("filtroData").value;
+    const filtroTipo = document.getElementById("filtroTipo").value;
+    const filtroResponsavel = document.getElementById("filtroResponsavel").value.trim().toLowerCase();
+    const filtroColaborador = document.getElementById("filtroColaborador").value.trim().toLowerCase();
+
+    formsFiltrados = formsOriginais.filter(item => {
+        const okData = !filtroData || item.data_inspecao === filtroData;
+        const okTipo = !filtroTipo || item.tipo_inspecao === filtroTipo;
+
+        const okResp = !filtroResponsavel ||
+            String(item.responsavel_1 || "").toLowerCase().includes(filtroResponsavel) ||
+            String(item.responsavel_2 || "").toLowerCase().includes(filtroResponsavel);
+
+        const okColab = !filtroColaborador ||
+            String(item.matricula_colaborador_1 || "").toLowerCase().includes(filtroColaborador) ||
+            String(item.matricula_colaborador_2 || "").toLowerCase().includes(filtroColaborador);
+
+        return okData && okTipo && okResp && okColab;
+    });
+
+    renderTabela(formsFiltrados);
+    setStatus(`${formsFiltrados.length} inspeção(ões) encontrada(s).`, "ok");
+}
+
+function limparFiltros(){
+    document.getElementById("filtroData").value = "";
+    document.getElementById("filtroTipo").value = "";
+    document.getElementById("filtroResponsavel").value = "";
+    document.getElementById("filtroColaborador").value = "";
+    formsFiltrados = [...formsOriginais];
+    renderTabela(formsFiltrados);
+    setStatus("Filtros limpos.", "info");
+}
+
+async function carregarDados(){
+    setStatus("Carregando inspeções...", "info");
+
+    try {
+        const r = await fetch(`${API}/listar-forms`);
+        const j = await r.json().catch(() => ([]));
+
+        if (!r.ok) {
+            setStatus((j.error || "Erro ao carregar dados.") + (j.detail ? " | " + j.detail : ""), "erro");
+            return;
+        }
+
+        formsOriginais = Array.isArray(j) ? j : [];
+        formsFiltrados = [...formsOriginais];
+
+        renderTabela(formsFiltrados);
+        setStatus(`${formsFiltrados.length} inspeção(ões) carregada(s) com sucesso.`, "ok");
+    } catch (err) {
+        console.error(err);
+        setStatus("Falha ao conectar ao servidor.", "erro");
+    }
+}
+
+function abrirDetalhes(id){
+    const item = formsOriginais.find(x => Number(x.id) === Number(id));
+    if (!item) return;
+
+    document.getElementById("detId").textContent = item.id ?? "-";
+    document.getElementById("detData").textContent = formatarData(item.data_inspecao);
+    document.getElementById("detTipo").textContent = labelTipo(item.tipo_inspecao);
+    document.getElementById("detCriadoEm").textContent = formatarDataHora(item.criado_em);
+
+    document.getElementById("detResp1").textContent = item.responsavel_1 || "-";
+    document.getElementById("detMat1").textContent = item.matricula_1 || "-";
+    document.getElementById("detResp2").textContent = item.responsavel_2 || "-";
+    document.getElementById("detMat2").textContent = item.matricula_2 || "-";
+
+    document.getElementById("detColab1").textContent = item.matricula_colaborador_1 || "-";
+    document.getElementById("detColab2").textContent = item.matricula_colaborador_2 || "-";
+
+    document.getElementById("detPlaca").textContent = item.placa_veiculo || "-";
+    document.getElementById("detTipoVeiculo").textContent = item.tipo_veiculo || "-";
+
+    const checklist = parseChecklist(item);
+    const container = document.getElementById("checklistDetalhes");
+    container.innerHTML = "";
+
+    if (!checklist.length){
+        container.innerHTML = `
+            <div class="check-item">
+                <div class="check-title">Nenhum checklist registrado.</div>
+            </div>
+        `;
+    } else {
+        checklist.forEach(reg => {
+            const nc = reg.status === "Não Conforme";
+            const badge = nc
+                ? `<span class="badge badge-nc">Não Conforme</span>`
+                : `<span class="badge badge-ok">${reg.status || "Sem status"}</span>`;
+
+            const obs = reg.observacao
+                ? `<div class="obs-box"><strong>Observação:</strong> ${reg.observacao}</div>`
+                : "";
+
+            const foto = reg.foto_nome
+                ? `<div class="obs-box"><strong>Foto informada:</strong> ${reg.foto_nome}</div>`
+                : "";
+
+            container.innerHTML += `
+                <div class="check-item ${nc ? "top-nc" : ""}">
+                    <div class="check-title">${reg.categoria || "-"} • ${reg.item || "-"}</div>
+
+                    <div class="check-meta">
+                        ${badge}
+                        <span class="badge badge-ok">Grupo: ${reg.grupo || "-"}</span>
+                    </div>
+
+                    ${obs}
+                    ${foto}
+                </div>
+            `;
+        });
+    }
+
+    document.getElementById("modalDetalhes").style.display = "flex";
+}
+
+function fecharModal(){
+    document.getElementById("modalDetalhes").style.display = "none";
+}
+
+window.addEventListener("click", (e) => {
+    const modal = document.getElementById("modalDetalhes");
+    if (e.target === modal) {
+        fecharModal();
+    }
+});
+
+window.addEventListener("load", carregarDados);
+</script>
+
+</body>
+</html>
