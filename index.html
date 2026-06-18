@@ -832,7 +832,7 @@ function abrirDetalhes(id){
     document.getElementById("detTipoVeiculo").textContent = item.tipo_veiculo || "-";
 
     
-onst checklist = parseChecklist(item);
+const checklist = parseChecklist(item);
 const container = document.getElementById("checklistDetalhes");
 container.innerHTML = "";
 
