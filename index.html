@@ -831,44 +831,63 @@ function abrirDetalhes(id){
     document.getElementById("detPlaca").textContent = item.placa_veiculo || "-";
     document.getElementById("detTipoVeiculo").textContent = item.tipo_veiculo || "-";
 
-    const checklist = parseChecklist(item);
-    const container = document.getElementById("checklistDetalhes");
-    container.innerHTML = "";
+    
+onst checklist = parseChecklist(item);
+const container = document.getElementById("checklistDetalhes");
+container.innerHTML = "";
 
-    if (!checklist.length){
-        container.innerHTML = `
-            <div class="check-item">
-                <div class="check-title">Nenhum checklist registrado.</div>
-            </div>
-        `;
-    } else {
-        checklist.forEach(reg => {
-            const nc = reg.status === "Não Conforme";
-            const badge = nc
-                ? `<span class="badge badge-nc">Não Conforme</span>`
-                : `<span class="badge badge-ok">${reg.status || "Sem status"}</span>`;
+if (!checklist.length){
+    container.innerHTML = `
+        <div class="check-item">
+            <div class="check-title">Nenhum checklist registrado.</div>
+        </div>
+    `;
+} else {
+    checklist.forEach(reg => {
+        const nc = reg.status === "Não Conforme";
 
-            const obs = reg.observacao
-                ? `<div class="obs-box"><strong>Observação:</strong> ${reg.observacao}</div>`
+        const badge = nc
+            ? `<span class="badge badge-nc">Não Conforme</span>`
+            : `<span class="badge badge-ok">${reg.status || "Sem status"}</span>`;
+
+        const obs = reg.observacao
+            ? `<div class="obs-box"><strong>Observação:</strong> ${reg.observacao}</div>`
+            : "";
+
+        const foto = reg.foto_url
+            ? `
+                <div class="foto-box">
+                    <div class="foto-label">Foto da não conformidade</div>
+                    ${reg.foto_url}
+                    ${reg.foto_nome ? `<div class="foto-nome">${reg.foto_nome}</div>` : ""}
+                </div>
+              `
+            : reg.foto_nome
+                ? `
+                    <div class="foto-box">
+                        <div class="foto-label">Foto informada</div>
+                        <div class="sem-foto">A imagem não está disponível para visualização ainda.</div>
+                        <div class="foto-nome">${reg.foto_nome}</div>
+                    </div>
+                  `
                 : "";
 
-            const foto = reg.foto_url
-    ? `
-        <div class="foto-box">
-            <div class="foto-label">Foto da não conformidade</div>
-            ${reg.foto_url}
-            ${reg.foto_nome ? `<div class="foto-nome">${reg.foto_nome}</div>` : ""}
-        </div>
-      `
-    : reg.foto_nome
-        ? `
-            <div class="foto-box">
-                <div class="foto-label">Foto informada</div>
-                <div class="sem-foto">A imagem não está disponível para visualização ainda.</div>
-                <div class="foto-nome">${reg.foto_nome}</div>
+        container.innerHTML += `
+            <div class="check-item ${nc ? "top-nc" : ""}">
+                <div class="check-title">${reg.categoria || "-"} • ${reg.item || "-"}</div>
+
+                <div class="check-meta">
+                    ${badge}
+                    <span class="badge badge-ok">Grupo: ${reg.grupo || "-"}</span>
+                </div>
+
+                ${obs}
+                ${foto}
             </div>
-          `
-        : "";
+        `;
+    });
+}
+
 
             container.innerHTML += `
                 <div class="check-item ${nc ? "top-nc" : ""}">
