@@ -649,475 +649,259 @@
 <script>
 const API = "https://forms.pedro-fillype.workers.dev";
 
-const itensEPI = [
-    'Botina Impermeável',
-    'Capa de Chuva',
-    'Capacete Aba Total',
-    'Cinturão de Segurança',
-    'Talabarte',
-    'Trava Quedas',
-    'Luva de Cobertura',
-    'Luva Isolante Classe 0',
-    'Luva Isolante Classe II',
-    'Luva de Vaqueta',
-    'Balaclava',
-    'Uniforme Anti Chamas',
-    'Óculos de Segurança',
-    'Perneira',
-    'Botina',
-    'Manga Isolante',
-    'Outros'
-];
-
-const itensEPC = [
-    'Bastão "Pega Tudo"',
-    'Bastão Podador',
-    'Vara de Manobra',
-    'Bay-pass 13,8 kV',
-    'Dispositivo Anti Queda',
-    'Cone de Sinalização',
-    'Aterramento BT',
-    'Aterramento MT',
-    'Detector de Tensão BT',
-    'Detector de Tensão MT',
-    'Dinamômetro',
-    'Escada Extensível',
-    'Escada Singela',
-    'Manta Isolante',
-    'Placa de Sinalização',
-    'Fita de Transposição',
-    'Outros'
-];
-
-const veiculos = {
-    simples: [
-        'Buzina',
-        'Chave de Roda',
-        'Luz de Ré',
-        'Luz de Freio',
-        'Setas',
-        'Farol',
-        'Pneu de Estepe',
-        'Freio de Mão',
-        'Limpador de Para-brisa',
-        'Esguicho',
-        'Macaco',
-        'Pneus',
-        'Retrovisores',
-        'Triângulo de Sinalização',
-        'Rádio VHF',
-        'Calços p/ Pneus'
-    ],
-
-    escada: [
-        'Buzina',
-        'Luz de Ré',
-        'Luz de Freio',
-        'Setas',
-        'Farol',
-        'Pneu de Estepe',
-        'Freio de Mão',
-        'Limpador de Para-brisa',
-        'Esguicho',
-        'Macaco',
-        'Pneus',
-        'Retrovisores',
-        'Triângulo de Sinalização',
-        'Rádio VHF',
-        'Condições da Escada Central',
-        'Mangueiras da Escada',
-        'Calços p/ Pneus',
-        'Calços p/ Patolas',
-        'Patolas'
-    ],
-
-    cesto: [
-        'Buzina',
-        'Luz de Ré',
-        'Luz de Freio',
-        'Setas',
-        'Farol',
-        'Pneu de Estepe',
-        'Freio de Mão',
-        'Limpador de Para-brisa',
-        'Esguicho',
-        'Macaco',
-        'Pneus',
-        'Retrovisores',
-        'Triângulo de Sinalização',
-        'Rádio VHF',
-        'Condições do Cesto',
-        'Mangueiras do Cesto',
-        'Lança do Cesto',
-        'Calços p/ Pneus',
-        'Calços p/ Patolas',
-        'Patolas'
-    ],
-
-    passeio: [
-        'Buzina',
-        'Luz de Ré',
-        'Luz de Freio',
-        'Setas',
-        'Farol',
-        'Freio de Mão',
-        'Limpador de Para-brisa',
-        'Esguicho',
-        'Pneus',
-        'Retrovisores',
-        'Triângulo de Sinalização'
-    ]
-};
-
-const secaoEPC = document.getElementById("secaoEPC");
-const secaoVeiculo = document.getElementById("secaoVeiculo");
-const checklistVeiculo = document.getElementById("checklistVeiculo");
-const secaoColaboradores = document.getElementById("secaoColaboradores");
-
-const tipoVeiculo = document.getElementById("tipoVeiculo");
-const tituloVeiculo = document.getElementById("tituloVeiculo");
-const listaVeiculo = document.getElementById("listaVeiculo");
-const listaItens = document.getElementById("listaItens");
-const placaVeiculo = document.getElementById("placaVeiculo");
-
-const btnSalvar = document.getElementById("btnSalvar");
-const statusEl = document.getElementById("status");
+let formsOriginais = [];
+let formsFiltrados = [];
 
 function setStatus(msg, tipo = "info"){
-    statusEl.textContent = msg;
-    statusEl.className = "status " + tipo;
+    const el = document.getElementById("status");
+    el.textContent = msg;
+    el.className = "status " + tipo;
 }
 
-function toggleNC(idLinha, valor){
-    const linha = document.getElementById(idLinha);
-    if (!linha) return;
-
-    linha.style.display = valor === "Não Conforme" ? "block" : "none";
+function formatarData(data){
+    if (!data) return "-";
+    const d = new Date(data + "T00:00:00");
+    return d.toLocaleDateString("pt-BR");
 }
 
-function montarLinhaChecklist(nomeGrupo, item, indice, idNC, categoria){
-    return `
-        <div class="item-card" data-grupo="${nomeGrupo}" data-item="${item}" data-categoria="${categoria}">
-            <div class="item-title">${indice + 1} - ${item}</div>
-
-            <div class="opcoes-grid">
-                <div class="opcao-btn conforme">
-                    <input
-                        type="radio"
-                        id="${nomeGrupo}_conforme"
-                        name="${nomeGrupo}"
-                        value="Conforme"
-                        onchange="toggleNC('${idNC}', this.value)"
-                    >
-                    <label for="${nomeGrupo}_conforme">Conforme</label>
-                </div>
-
-                <div class="opcao-btn nao-conforme">
-                    <input
-                        type="radio"
-                        id="${nomeGrupo}_nao_conforme"
-                        name="${nomeGrupo}"
-                        value="Não Conforme"
-                        onchange="toggleNC('${idNC}', this.value)"
-                    >
-                    <label for="${nomeGrupo}_nao_conforme">Não Conforme</label>
-                </div>
-
-                <div class="opcao-btn falta">
-                    <input
-                        type="radio"
-                        id="${nomeGrupo}_falta"
-                        name="${nomeGrupo}"
-                        value="Falta"
-                        onchange="toggleNC('${idNC}', this.value)"
-                    >
-                    <label for="${nomeGrupo}_falta">Falta</label>
-                </div>
-
-                <div class="opcao-btn na">
-                    <input
-                        type="radio"
-                        id="${nomeGrupo}_na"
-                        name="${nomeGrupo}"
-                        value="NA"
-                        onchange="toggleNC('${idNC}', this.value)"
-                    >
-                    <label for="${nomeGrupo}_na">Não se Aplica</label>
-                </div>
-            </div>
-
-            <div id="${idNC}" class="naoConformeBox">
-                <div class="naoConformeContent">
-                    <strong>Registro da Não Conformidade</strong>
-
-                    <br><br>
-                    Foto da não conformidade:
-                    <br><br>
-
-                    <input type="file" class="fotoNC" accept="image/*" capture="environment">
-
-                    <br><br>
-                    Observação:
-                    <textarea class="obsNC" placeholder="Descreva a não conformidade..."></textarea>
-                </div>
-            </div>
-        </div>
-    `;
+function formatarDataHora(data){
+    if (!data) return "-";
+    const d = new Date(data);
+    if (isNaN(d.getTime())) return data;
+    return d.toLocaleString("pt-BR");
 }
 
-function adicionarTituloGrupo(titulo) {
-    listaItens.innerHTML += `
-        <div class="item-card" style="background:#eaf6fb; border:1px solid #cfeaf5;">
-            <div class="item-title" style="margin:0; color:#005b7f; text-transform:uppercase;">${titulo}</div>
-        </div>
-    `;
+function labelTipo(tipo){
+    return tipo === "epi" ? "EPI / EPC" : "Viatura";
 }
 
-function carregarChecklistEPC(){
-    listaItens.innerHTML = "";
-
-    adicionarTituloGrupo("EPI");
-    itensEPI.forEach((item, i) => {
-        listaItens.innerHTML += montarLinhaChecklist(`epi${i}`, item, i, `nc_epi_${i}`, "EPI");
-    });
-
-    adicionarTituloGrupo("EPC");
-    itensEPC.forEach((item, i) => {
-        listaItens.innerHTML += montarLinhaChecklist(`epc${i}`, item, i, `nc_epc_${i}`, "EPC");
-    });
+function badgeTipo(tipo){
+    if (tipo === "epi") {
+        return `<span class="badge badge-epi">EPI / EPC</span>`;
+    }
+    return `<span class="badge badge-viatura">Viatura</span>`;
 }
 
-function carregarChecklistVeiculo(tipo){
-    listaVeiculo.innerHTML = "";
+function parseChecklist(item){
+    if (Array.isArray(item.checklist)) return item.checklist;
 
-    if (!veiculos[tipo]) return;
-
-    veiculos[tipo].forEach((item, i) => {
-        listaVeiculo.innerHTML += montarLinhaChecklist(`v${tipo}${i}`, item, i, `ncv${tipo}${i}`, "VEICULO");
-    });
-}
-
-function getTipoInspecaoSelecionado() {
-    const selecionado = document.querySelector('input[name="tipo"]:checked');
-    return selecionado ? selecionado.value : "";
-}
-
-function validarFormulario(payload) {
-    if (!payload.data_inspecao) return "Informe a data da inspeção.";
-    if (!payload.responsavel_1) return "Informe o Responsável 01.";
-    if (!payload.matricula_1) return "Informe a matrícula do Responsável 01.";
-    if (!payload.tipo_inspecao) return "Selecione o tipo de inspeção.";
-
-    if (payload.tipo_inspecao === "epi" && !payload.matricula_colaborador_1) {
-        return "Informe a matrícula do colaborador 01 para inspeção EPI/EPC.";
+    if (typeof item.checklist_json === "string") {
+        try {
+            return JSON.parse(item.checklist_json);
+        } catch {
+            return [];
+        }
     }
 
-    if (payload.tipo_inspecao === "viatura" && !payload.tipo_veiculo) {
-        return "Selecione o tipo do veículo.";
-    }
-
-    return "";
+    return [];
 }
 
-/**
- * Converte arquivo para data URL (base64)
- */
-function arquivoParaDataURL(file) {
-    return new Promise((resolve, reject) => {
-        if (!file) {
-            resolve("");
-            return;
-        }
-
-        const reader = new FileReader();
-
-        reader.onload = () => resolve(reader.result || "");
-        reader.onerror = reject;
-
-        reader.readAsDataURL(file);
-    });
+function contarNaoConformes(item){
+    const checklist = parseChecklist(item);
+    return checklist.filter(x => x.status === "Não Conforme").length;
 }
 
-/**
- * Coleta checklist incluindo foto real em base64
- */
-async function coletarChecklistDoContainer(container) {
-    const registros = [];
-    const cards = container.querySelectorAll(".item-card[data-grupo]");
+function atualizarKPIs(lista){
+    const total = lista.length;
+    const totalEpi = lista.filter(x => x.tipo_inspecao === "epi").length;
+    const totalViatura = lista.filter(x => x.tipo_inspecao === "viatura").length;
+    const totalNC = lista.reduce((acc, item) => acc + contarNaoConformes(item), 0);
 
-    for (const card of cards) {
-        const grupo = card.dataset.grupo;
-        const item = card.dataset.item;
-        const categoria = card.dataset.categoria;
-
-        const selecionado = card.querySelector(`input[name="${grupo}"]:checked`);
-        const status = selecionado ? selecionado.value : "";
-
-        const obs = card.querySelector(".obsNC");
-        const foto = card.querySelector(".fotoNC");
-        const file = (foto && foto.files && foto.files[0]) ? foto.files[0] : null;
-
-        const observacao = obs ? obs.value.trim() : "";
-        const foto_nome = file ? file.name : "";
-        let foto_base64 = "";
-
-        // só converte se houver arquivo
-        if (file) {
-            // limite simples recomendado (ex.: 1,5 MB)
-            if (file.size > 1.5 * 1024 * 1024) {
-                throw new Error(`A foto do item "${item}" está muito grande. Reduza para até 1,5 MB.`);
-            }
-
-            foto_base64 = await arquivoParaDataURL(file);
-        }
-
-        registros.push({
-            categoria,
-            grupo,
-            item,
-            status,
-            observacao,
-            foto_nome,
-            foto_base64
-        });
-    }
-
-    return registros;
+    document.getElementById("kpiTotal").textContent = total;
+    document.getElementById("kpiEpi").textContent = totalEpi;
+    document.getElementById("kpiViatura").textContent = totalViatura;
+    document.getElementById("kpiNC").textContent = totalNC;
 }
 
-async function salvarInspecao() {
-    btnSalvar.disabled = true;
-    setStatus("Salvando inspeção...", "info");
+function renderTabela(lista){
+    const tbody = document.getElementById("tbodyForms");
+    tbody.innerHTML = "";
 
-    try {
-        const tipo_inspecao = getTipoInspecaoSelecionado();
-
-        let checklist = [];
-        if (tipo_inspecao === "epi") {
-            checklist = await coletarChecklistDoContainer(listaItens);
-        } else if (tipo_inspecao === "viatura") {
-            checklist = await coletarChecklistDoContainer(listaVeiculo);
-        }
-
-        const payload = {
-            data_inspecao: document.getElementById("dataInspecao").value,
-            responsavel_1: document.getElementById("resp1").value.trim(),
-            matricula_1: document.getElementById("mat1").value.trim(),
-            responsavel_2: document.getElementById("resp2").value.trim(),
-            matricula_2: document.getElementById("mat2").value.trim(),
-
-            matricula_colaborador_1: document.getElementById("matColab1").value.trim(),
-            matricula_colaborador_2: document.getElementById("matColab2").value.trim(),
-
-            tipo_inspecao,
-            placa_veiculo: document.getElementById("placaVeiculo").value.trim(),
-            tipo_veiculo: document.getElementById("tipoVeiculo").value,
-            checklist
-        };
-
-        const erroValidacao = validarFormulario(payload);
-        if (erroValidacao) {
-            setStatus(erroValidacao, "erro");
-            return;
-        }
-
-        const r = await fetch(`${API}/salvar-form-inspecao`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const j = await r.json().catch(() => ({}));
-
-        if (!r.ok) {
-            console.error("Erro do Worker:", j);
-            setStatus(
-                (j.error || "Erro ao salvar inspeção.") +
-                (j.detail ? " | " + j.detail : ""),
-                "erro"
-            );
-            return;
-        }
-
-        setStatus("Formulário enviado com sucesso!", "ok");
-
-        document.getElementById("dataInspecao").value = "";
-        document.getElementById("resp1").value = "";
-        document.getElementById("mat1").value = "";
-        document.getElementById("resp2").value = "";
-        document.getElementById("mat2").value = "";
-        document.getElementById("matColab1").value = "";
-        document.getElementById("matColab2").value = "";
-        document.getElementById("placaVeiculo").value = "";
-        document.getElementById("tipoVeiculo").value = "";
-
-        document.querySelectorAll('input[name="tipo"]').forEach(r => r.checked = false);
-
-        secaoEPC.classList.add("hidden");
-        secaoVeiculo.classList.add("hidden");
-        checklistVeiculo.classList.add("hidden");
-        secaoColaboradores.classList.add("hidden");
-
-        listaVeiculo.innerHTML = "";
-        carregarChecklistEPC();
-
-    } catch (err) {
-        console.error(err);
-        setStatus(err.message || "Falha ao conectar ao servidor.", "erro");
-    } finally {
-        btnSalvar.disabled = false;
-    }
-}
-
-document.querySelectorAll('input[name="tipo"]').forEach(radio => {
-    radio.addEventListener("change", () => {
-        if (radio.value === "epi" && radio.checked) {
-            secaoEPC.classList.remove("hidden");
-            secaoColaboradores.classList.remove("hidden");
-
-            secaoVeiculo.classList.add("hidden");
-            checklistVeiculo.classList.add("hidden");
-
-            tipoVeiculo.value = "";
-            listaVeiculo.innerHTML = "";
-            document.getElementById("placaVeiculo").value = "";
-        }
-
-        if (radio.value === "viatura" && radio.checked) {
-            secaoVeiculo.classList.remove("hidden");
-
-            secaoEPC.classList.add("hidden");
-            secaoColaboradores.classList.add("hidden");
-
-            document.getElementById("matColab1").value = "";
-            document.getElementById("matColab2").value = "";
-        }
-    });
-});
-
-tipoVeiculo.addEventListener("change", () => {
-    const tipo = tipoVeiculo.value;
-
-    if (!tipo) {
-        checklistVeiculo.classList.add("hidden");
-        listaVeiculo.innerHTML = "";
+    if (!lista.length){
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="10" style="text-align:center; padding:20px; font-weight:bold; color:#6b7280;">
+                    Nenhuma inspeção encontrada.
+                </td>
+            </tr>
+        `;
+        atualizarKPIs(lista);
         return;
     }
 
-    checklistVeiculo.classList.remove("hidden");
-    tituloVeiculo.textContent = tipoVeiculo.options[tipoVeiculo.selectedIndex].text;
-    carregarChecklistVeiculo(tipo);
+    lista.forEach(item => {
+        const nc = contarNaoConformes(item);
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${item.id ?? "-"}</td>
+                <td>${formatarData(item.data_inspecao)}</td>
+                <td>${badgeTipo(item.tipo_inspecao)}</td>
+                <td>${item.responsavel_1 || "-"}</td>
+                <td>${item.matricula_1 || "-"}</td>
+                <td>${item.matricula_colaborador_1 || "-"}</td>
+                <td>${item.placa_veiculo || "-"}</td>
+                <td>${item.tipo_veiculo || "-"}</td>
+                <td>${nc > 0 ? `<span class="badge badge-nc">${nc}</span>` : `<span class="badge badge-ok">0</span>`}</td>
+                <td>
+                    <button type="button" onclick="abrirDetalhes(${item.id})">Ver detalhes</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    atualizarKPIs(lista);
+}
+
+function aplicarFiltros(){
+    const filtroData = document.getElementById("filtroData").value;
+    const filtroTipo = document.getElementById("filtroTipo").value;
+    const filtroResponsavel = document.getElementById("filtroResponsavel").value.trim().toLowerCase();
+    const filtroColaborador = document.getElementById("filtroColaborador").value.trim().toLowerCase();
+
+    formsFiltrados = formsOriginais.filter(item => {
+        const okData = !filtroData || item.data_inspecao === filtroData;
+        const okTipo = !filtroTipo || item.tipo_inspecao === filtroTipo;
+
+        const okResp = !filtroResponsavel ||
+            String(item.responsavel_1 || "").toLowerCase().includes(filtroResponsavel) ||
+            String(item.responsavel_2 || "").toLowerCase().includes(filtroResponsavel);
+
+        const okColab = !filtroColaborador ||
+            String(item.matricula_colaborador_1 || "").toLowerCase().includes(filtroColaborador) ||
+            String(item.matricula_colaborador_2 || "").toLowerCase().includes(filtroColaborador);
+
+        return okData && okTipo && okResp && okColab;
+    });
+
+    renderTabela(formsFiltrados);
+    setStatus(`${formsFiltrados.length} inspeção(ões) encontrada(s).`, "ok");
+}
+
+function limparFiltros(){
+    document.getElementById("filtroData").value = "";
+    document.getElementById("filtroTipo").value = "";
+    document.getElementById("filtroResponsavel").value = "";
+    document.getElementById("filtroColaborador").value = "";
+    formsFiltrados = [...formsOriginais];
+    renderTabela(formsFiltrados);
+    setStatus("Filtros limpos.", "info");
+}
+
+async function carregarDados(){
+    setStatus("Carregando inspeções...", "info");
+
+    try {
+        const r = await fetch(`${API}/listar-forms`);
+        const j = await r.json().catch(() => ([]));
+
+        if (!r.ok) {
+            setStatus((j.error || "Erro ao carregar dados.") + (j.detail ? " | " + j.detail : ""), "erro");
+            return;
+        }
+
+        formsOriginais = Array.isArray(j) ? j : [];
+        formsFiltrados = [...formsOriginais];
+
+        renderTabela(formsFiltrados);
+        setStatus(`${formsFiltrados.length} inspeção(ões) carregada(s) com sucesso.`, "ok");
+    } catch (err) {
+        console.error(err);
+        setStatus("Falha ao conectar ao servidor.", "erro");
+    }
+}
+
+function abrirDetalhes(id){
+    const item = formsOriginais.find(x => Number(x.id) === Number(id));
+    if (!item) return;
+
+    document.getElementById("detId").textContent = item.id ?? "-";
+    document.getElementById("detData").textContent = formatarData(item.data_inspecao);
+    document.getElementById("detTipo").textContent = labelTipo(item.tipo_inspecao);
+    document.getElementById("detCriadoEm").textContent = formatarDataHora(item.criado_em);
+
+    document.getElementById("detResp1").textContent = item.responsavel_1 || "-";
+    document.getElementById("detMat1").textContent = item.matricula_1 || "-";
+    document.getElementById("detResp2").textContent = item.responsavel_2 || "-";
+    document.getElementById("detMat2").textContent = item.matricula_2 || "-";
+
+    document.getElementById("detColab1").textContent = item.matricula_colaborador_1 || "-";
+    document.getElementById("detColab2").textContent = item.matricula_colaborador_2 || "-";
+
+    document.getElementById("detPlaca").textContent = item.placa_veiculo || "-";
+    document.getElementById("detTipoVeiculo").textContent = item.tipo_veiculo || "-";
+
+    const checklist = parseChecklist(item);
+    const container = document.getElementById("checklistDetalhes");
+    container.innerHTML = "";
+
+    if (!checklist.length){
+        container.innerHTML = `
+            <div class="check-item">
+                <div class="check-title">Nenhum checklist registrado.</div>
+            </div>
+        `;
+    } else {
+        checklist.forEach(reg => {
+            const nc = reg.status === "Não Conforme";
+            const badge = nc
+                ? `<span class="badge badge-nc">Não Conforme</span>`
+                : `<span class="badge badge-ok">${reg.status || "Sem status"}</span>`;
+
+            const obs = reg.observacao
+                ? `<div class="obs-box"><strong>Observação:</strong> ${reg.observacao}</div>`
+                : "";
+
+            const foto = reg.foto_url
+    ? `
+        <div class="foto-box">
+            <div class="foto-label">Foto da não conformidade</div>
+            ${reg.foto_url}
+            ${reg.foto_nome ? `<div class="foto-nome">${reg.foto_nome}</div>` : ""}
+        </div>
+      `
+    : reg.foto_nome
+        ? `
+            <div class="foto-box">
+                <div class="foto-label">Foto informada</div>
+                <div class="sem-foto">A imagem não está disponível para visualização ainda.</div>
+                <div class="foto-nome">${reg.foto_nome}</div>
+            </div>
+          `
+        : "";
+
+            container.innerHTML += `
+                <div class="check-item ${nc ? "top-nc" : ""}">
+                    <div class="check-title">${reg.categoria || "-"} • ${reg.item || "-"}</div>
+
+                    <div class="check-meta">
+                        ${badge}
+                        <span class="badge badge-ok">Grupo: ${reg.grupo || "-"}</span>
+                    </div>
+
+                    ${obs}
+                    ${foto}
+                </div>
+            `;
+        });
+    }
+
+    document.getElementById("modalDetalhes").style.display = "flex";
+}
+
+function fecharModal(){
+    document.getElementById("modalDetalhes").style.display = "none";
+}
+
+window.addEventListener("click", (e) => {
+    const modal = document.getElementById("modalDetalhes");
+    if (e.target === modal) {
+        fecharModal();
+    }
 });
 
-placaVeiculo.addEventListener("input", () => {
-    placaVeiculo.value = placaVeiculo.value.replace(/\s+/g, "").toUpperCase();
-});
-
-btnSalvar.addEventListener("click", salvarInspecao);
-
-carregarChecklistEPC();
+window.addEventListener("load", carregarDados);
 </script>
+
 </body>
 </html>
