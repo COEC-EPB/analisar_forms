@@ -336,11 +336,21 @@
 
 .preview-img{
     width:100%;
-    max-width:320px;
-    border-radius:10px;
+    max-width:450px;
+    max-height:350px;
+    object-fit:contain;
+    border-radius:12px;
     border:1px solid #d1d5db;
     display:block;
-    margin-top:8px;
+    margin-top:10px;
+    background:#f3f4f6;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.preview-img:hover{
+    transform:scale(1.01);
+    box-shadow:0 5px 15px rgba(0,0,0,.15);
 }
 
 .sem-foto{
@@ -751,6 +761,41 @@ function renderTabela(lista){
     });
 
     atualizarKPIs(lista);
+}
+    function abrirFoto(url) {
+
+    const overlay = document.createElement("div");
+
+    overlay.style.cssText = `
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,.85);
+        z-index:9999;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        padding:20px;
+        cursor:pointer;
+    `;
+
+    overlay.innerHTML = `
+        <img
+            src="${url}"
+            style="
+                max-width:95vw;
+                max-height:90vh;
+                object-fit:contain;
+                border-radius:12px;
+                box-shadow:0 10px 40px rgba(0,0,0,.5);
+            "
+        >
+    `;
+
+    overlay.addEventListener("click", () => {
+        overlay.remove();
+    });
+
+    document.body.appendChild(overlay);
 }
 
 function aplicarFiltros(){
