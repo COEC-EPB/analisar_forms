@@ -855,17 +855,56 @@ function abrirDetalhes(id){
             const foto = reg.foto_url
     ? `
         <div class="foto-box">
-            <div class="foto-label">Foto da não conformidade</div>
-            ${reg.foto_url}
-            ${reg.foto_nome ? `<div class="foto-nome">${reg.foto_nome}</div>` : ""}
+
+            <div class="foto-label">
+                Foto da não conformidade
+            </div>
+
+            <img
+                src="${reg.foto_url}"
+                class="preview-img"
+                alt="Foto da não conformidade"
+                loading="lazy"
+                onclick="abrirFoto('${reg.foto_url}')"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                style="cursor:pointer;"
+            >
+
+            <div
+                class="sem-foto"
+                style="display:none;"
+            >
+                Não foi possível carregar a imagem.
+            </div>
+
+            ${
+                reg.foto_nome
+                ? `
+                    <div class="foto-nome">
+                        ${reg.foto_nome}
+                    </div>
+                  `
+                : ""
+            }
+
         </div>
       `
     : reg.foto_nome
         ? `
             <div class="foto-box">
-                <div class="foto-label">Foto informada</div>
-                <div class="sem-foto">A imagem não está disponível para visualização ainda.</div>
-                <div class="foto-nome">${reg.foto_nome}</div>
+
+                <div class="foto-label">
+                    Foto informada
+                </div>
+
+                <div class="sem-foto">
+                    A imagem não está disponível para visualização.
+                </div>
+
+                <div class="foto-nome">
+                    ${reg.foto_nome}
+                </div>
+
             </div>
           `
         : "";
